@@ -7,5 +7,11 @@ premieres_etapes_lignes_retrait_valeurs_impossibles
 premieres_fonctions_modification_case_2
 - modification de la case 3 de la grille, sur premieres_fonctions_modifications_case_1 on voit le avant après set_tile_value
 
-premieres_fonctions_saisie_grille_depart_1
-- on voit l'affichage de la grille (à gauche) dans le terminal (à droite), sur premieres_fonctions_saisie_grille_depart_2 on voit les dispositions possibles données par disp_possible
+retrait_des_valeurs_impossibles
+- fonction clean_line et affichage
+
+possibilites_uniques_1&2
+- validate_single_possibility remplit les possibilités uniques, elle renvoie 1 si elle a modifié quoi que ce soit
+
+creation_sous_ensemble_1
+- montre fonctionnement des fonctions de création de sous-ensemble get_line_subset, get_col_subset, get_subsq_subset
