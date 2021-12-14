@@ -41,5 +41,9 @@ Subset get_line_subset (int n_line);
 Subset get_col_subset (int n_col);
 Subset get_subsq_subset (int n_carre);
 Sudoku_ensemble creation_ensemble (void);
+int clean_subset(Subset m_subset);
+int valid_exist_in_subset (Subset m_subset);
+int clean_grid (Sudoku_ensemble *m_ensemble);
+int valid_exist (Sudoku_ensemble *m_ensemble);
 
 #endif
