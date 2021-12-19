@@ -76,7 +76,7 @@ void disp_possible(void)
  * @param case de la grille
  * @param valeur 
  */
-void set_tile_value(sudoku_tile *tile, char value)
+void set_tile_value(sudoku_tile *tile, char value, char supposed)
 {
   int i;
 
@@ -86,6 +86,10 @@ void set_tile_value(sudoku_tile *tile, char value)
   {
     for (i = 0; i < 9; i++)
       tile->possible[i] = IMPOSSIBLE;
+
+    history[history_index].supposed = supposed;
+    history[history_index].tile = tile;
+    history_index++;
   }
 }
 
@@ -106,11 +110,11 @@ void req_start_grid(void)
 
       if (val >= '1' && val <= '9')
       {
-        set_tile_value(&grid[l * 9 + c], val - '0');
+        set_tile_value(&grid[l * 9 + c], val - '0', 0);
       }
       else
       {
-        set_tile_value(&grid[l * 9 + c], 0);
+        set_tile_value(&grid[l * 9 + c], 0, 0);
       }
     }
   }
@@ -362,8 +366,11 @@ int clean_subset(Subset m_subset)
     {
       for (i = 0; i < 9; i++)
       {
-        m_subset[i]->possible[val - 1] = IMPOSSIBLE;
-        ret = 1;
+        if (m_subset[i]->possible[val - 1] == POSSIBLE)
+        {
+          m_subset[i]->possible[val - 1] = IMPOSSIBLE;
+          ret = 1;
+        }
       }
     }
   }
@@ -378,6 +385,7 @@ int clean_subset(Subset m_subset)
  */
 int valid_exist_in_subset(Subset m_subset)
 {
+  //printf("dans %s\n", __func__);
   int i;
   int compteur;
   int v;
@@ -397,8 +405,10 @@ int valid_exist_in_subset(Subset m_subset)
       {
         if (m_subset[i]->possible[v - 1])
         {
-          set_tile_value(m_subset[i], v);
+          set_tile_value(m_subset[i], v, 0); 
           ret = 1;
+          //printf("valeur deduite %d\n", v);
+          //disp_final();
         }
       }
     }
@@ -420,9 +430,12 @@ int clean_grid(Sudoku_ensemble *m_ensemble)
 
   for (i = 0; i < 9; i++)
   {
-    ret |= clean_subset(m_ensemble->line[i]);
-    ret |= clean_subset(m_ensemble->col[i]);
-    ret |= clean_subset(m_ensemble->carre[i]);
+    if (clean_subset(m_ensemble->line[i]))
+      ret = 1;
+    if (clean_subset(m_ensemble->col[i]))
+      ret = 1;
+    if (clean_subset(m_ensemble->carre[i]))
+      ret = 1;
   }
 
   return ret;
@@ -441,14 +454,184 @@ int valid_exist(Sudoku_ensemble *m_ensemble)
 
   for (i = 0; i < 9; i++)
   {
-    clean_grid(m_ensemble);
+    ret |= clean_grid(m_ensemble);
     ret |= valid_exist_in_subset(m_ensemble->line[i]);
-    clean_grid(m_ensemble);
+    ret |= clean_grid(m_ensemble);
     ret |= valid_exist_in_subset(m_ensemble->col[i]);
-    clean_grid(m_ensemble);
+    ret |= clean_grid(m_ensemble);
     ret |= valid_exist_in_subset(m_ensemble->carre[i]);
-    clean_grid(m_ensemble);
+    ret |= clean_grid(m_ensemble);
   }
 
   return ret;
+}
+
+/**
+ * @brief Affiche l'history des affectations
+ */
+void afficher_history (void)
+{
+  int i;
+
+  for (i=0; i<history_index; i++)
+  {
+    printf("affectation %d %s: %d\n", i, history[i].supposed ? "supposition" : "deduction", history[i].tile->value);
+  }
+}
+
+/**
+ * @brief Indique si la grille est valide. La grille est invalide si elle contient une case dont la valeur est inconnue, et pour laquelle aucune valeur n'est possible.
+ * @return 1 si grille valide, 0 sinon
+ */
+int is_grid_valid (void)
+{
+  //printf("dans %s\n", __func__);
+  int i;
+  int j;
+  int compteur;
+
+  for (i=0; i<NBR_CASES; i++)
+  {
+    if (grid[i].value != INCONNU)
+      continue;
+
+    compteur = 0;
+    for (j=0; j<9; j++)
+    {
+      if (grid[i].possible[j] == 1)
+        compteur++;
+    }
+
+    if (compteur == 0)
+      return 0;
+  }
+
+  return 1;
+}
+
+/**
+ * @brief Recherche une case pour laquelle la valeur est inconnue et au moins une valeur est possible. Si une telle case existe, la fonction affecte une des valeurs possibles à la case par supposition
+ * @return 1 si une telle case est trouvée, 0 sinon
+ */
+int guess_value (void)
+{
+  //printf("dans %s\n", __func__);
+  int i;
+  int j;
+  int compteur;
+
+  for (i=0; i<NBR_CASES; i++)
+  {
+    if (grid[i].value != INCONNU)
+      continue;
+
+    compteur = 0;
+    for (j=0; j<9; j++)
+    {
+      if (grid[i].possible[j] == 1)
+        compteur++;
+    }
+
+    if (compteur != 0)
+    {
+      for (j = 0; j < 9; j++)
+      {
+        if (grid[i].possible[j] == 1)
+        {
+          //printf("\navant supposition");
+          //disp_final();
+          set_tile_value(&grid[i], j+1, 1);
+          //printf("valeur supposée %d", j+1);
+          //disp_final();
+          return 1;
+        }
+      }
+    }
+  }
+
+  return 0;
+}
+
+/**
+ * @brief Met toutes les valeurs possibles des cases inconnues à 1
+ */
+void re_init (void)
+{
+  int i;
+  int j;
+
+  for (i=0; i<NBR_CASES; i++)
+  {
+    if (grid[i].value != INCONNU)
+      continue;
+
+    for (j=0; j<9; j++)
+    {
+      grid[i].possible[j] = 1;
+    }
+  }
+}
+
+/**
+ * @brief Cette fonction supprime la dernière supposition et la marque comme impossible
+ * @param m_ensemble pointeur vers les ensembles de la grille
+ * @return 1 si on a enlevé une supposition, 0 sinon. Si on ne peut enlever de supposition cela implique que la grille est irrésolvable
+ */
+int back_play (Sudoku_ensemble *m_ensemble)
+{
+  //printf("\ndans %s\n\n", __func__);
+  //disp_final();
+  int i;
+  char tmp;
+
+  for (i=history_index-1; history[i].supposed != 1 && i!=0; i--)
+  {
+    history[i].tile->value = 0;
+    history_index--;
+  }
+
+  if (i==0)
+  {
+    return IRRESOLVABLE;
+  }
+
+  tmp = history[i].tile->value;
+  history[i].tile->value = 0;
+  re_init();
+  clean_grid(m_ensemble);
+  history[i].tile->possible[tmp-1] = 0;
+  history_index--;
+
+  //printf("supposition ne mène à rien\nsituation avant supposition");
+  //disp_final();
+
+  int j;
+  for (j=0; j<9; j++)
+  {
+    if (history[i].tile->possible[j] == POSSIBLE)
+    {
+      set_tile_value(history[i].tile, j + 1, 0);
+      //printf("back_play deduit %d", j + 1);
+    }
+  }
+  clean_grid(m_ensemble);
+  //disp_final();
+  return RESOLVABLE;
+}
+
+/**
+ * @brief Indique si la grille est complète
+ * @return 1 si grille complète, 0 sinon
+ */
+int is_grid_full (void)
+{
+  int i;
+
+  for (i=0; i<NBR_CASES; i++)
+  {
+    if (grid[i].value == INCONNU)
+      return 0;
+  }
+
+  return 1;
 }
