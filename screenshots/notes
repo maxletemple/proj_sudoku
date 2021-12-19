@@ -15,3 +15,18 @@ possibilites_uniques_1&2
 
 creation_sous_ensemble_1
 - montre fonctionnement des fonctions de création de sous-ensemble get_line_subset, get_col_subset, get_subsq_subset
+
+afficher_history
+- montre affichage de history
+
+is_grid_valid
+- montre fonction is_grid_valid
+
+re_init_avant et re_init_apres
+- montre fonction re_init
+
+guess_value
+- montre fonction guess_value
+
+back_play
+- montre fonction back_play
