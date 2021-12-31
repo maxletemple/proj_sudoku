@@ -1,9 +1,5 @@
 #include "sudoku.h"
 
-/******
-Cette version teste toutes les possibilités normalement, pas testé mis à part sur grille du sujet car difficile de construire les grilles permettant de vérifier cela
-******/
-
 sudoku_tile grid[NBR_CASES];
 Affectation history[NBR_CASES];
 int history_index = 0;
@@ -21,7 +17,7 @@ int main (int argc, char* argv[])
     while (valid_exist(&m_ensemble))
       ;
 
-    while (guess_value() && is_grid_valid())
+    while (is_grid_valid() && guess_value())
     {
       while (valid_exist(&m_ensemble))
         ;

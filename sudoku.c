@@ -575,7 +575,7 @@ void re_init (void)
 /**
  * @brief Cette fonction supprime la dernière supposition et la marque comme impossible
  * @param m_ensemble pointeur vers les ensembles de la grille
- * @return 1 si on a enlevé une supposition, 0 sinon. Si on ne peut enlever de supposition cela implique que la grille est irrésolvable
+ * @return 1 si on a enlevé une supposition, 0 sinon. Si on ne peut enlever de supposition cela implique que la grille est irrésoluble
  */
 int back_play (Sudoku_ensemble *m_ensemble)
 {
@@ -584,13 +584,12 @@ int back_play (Sudoku_ensemble *m_ensemble)
   int i;
   char tmp;
 
-  for (i=history_index-1; history[i].supposed != 1 && i!=0; i--)
+  for (i=history_index-1; history[i].supposed != 1 && i>=0; i--)
   {
     history[i].tile->value = 0;
     history_index--;
   }
-
-  if (i==0)
+  if (i<0)
   {
     return IRRESOLVABLE;
   }
@@ -605,6 +604,7 @@ int back_play (Sudoku_ensemble *m_ensemble)
   //printf("supposition ne mène à rien\nsituation avant supposition");
   //disp_final();
 
+  /*
   int j;
   for (j=0; j<9; j++)
   {
@@ -614,6 +614,7 @@ int back_play (Sudoku_ensemble *m_ensemble)
       //printf("back_play deduit %d", j + 1);
     }
   }
+  */
   clean_grid(m_ensemble);
   //disp_final();
   return RESOLVABLE;
